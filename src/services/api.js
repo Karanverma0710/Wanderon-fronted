@@ -1,24 +1,18 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import { API_BASE_URL, REQUEST_TIMEOUT, HTTP_STATUS, AUTH_STORAGE_KEYS } from '../utils/constants';
+import { API_BASE_URL, REQUEST_TIMEOUT, HTTP_STATUS } from '../utils/constants';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: REQUEST_TIMEOUT,
-  withCredentials: true,
+  withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+
 api.interceptors.request.use(
   (config) => {
-    const accessToken = Cookies.get(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
-    
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    
     return config;
   },
   (error) => {
@@ -33,36 +27,46 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && !originalRequest._retry) {
+    if (
+      error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
+      error.response?.data?.code === 'TOKEN_EXPIRED' &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = Cookies.get(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
-        
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
         const response = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
-          { refreshToken },
-          { withCredentials: true }
+          {},
+          { 
+            withCredentials: true 
+          }
         );
 
         if (response.data.success) {
-          const newAccessToken = response.data.data.accessToken;
-          Cookies.set(AUTH_STORAGE_KEYS.ACCESS_TOKEN, newAccessToken);
-          
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
-        Cookies.remove(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
-        Cookies.remove(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
-        localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
+        localStorage.removeItem('auth_user');
         
-        window.location.href = '/login';
+       const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
+      }
+    }
+
+    if (
+      error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
+      !originalRequest._retry
+    ) {
+      localStorage.removeItem('auth_user');
+      
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+        window.location.href = '/login';
       }
     }
 
