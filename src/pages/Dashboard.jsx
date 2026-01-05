@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import useAuth from '../hooks/useAuth';
 import Button from '../components/common/Button';
-import Loader from '../components/common/Loader';
+import PageLoader from '../components/common/PageLoader';
 
 const Dashboard = () => {
   const { user, loading, logoutAll } = useAuth();
@@ -13,7 +13,7 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return <Loader fullScreen />;
+    return <PageLoader message="Loading your dashboard..." />;
   }
 
   return (

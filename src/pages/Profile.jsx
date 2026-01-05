@@ -3,7 +3,7 @@ import useAuth from '../hooks/useAuth';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import ErrorMessage from '../components/common/ErrorMessage';
-import Loader from '../components/common/Loader';
+import PageLoader from '../components/common/PageLoader';
 import { validateChangePasswordForm } from '../utils/validation';
 
 const Profile = () => {
@@ -68,7 +68,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <Loader fullScreen />;
+    return <PageLoader message="Loading your profile..." />;
   }
 
   return (

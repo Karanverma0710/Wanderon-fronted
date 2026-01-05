@@ -5,7 +5,7 @@ import AuthService from '../../services/auth.service';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import Loader from '../../components/common/Loader';
+import PageLoader from '../../components/common/PageLoader';
 import { validateResetPasswordForm } from '../../utils/validation';
 import { ROUTES } from '../../utils/constants';
 
@@ -84,7 +84,7 @@ const ResetPassword = () => {
   };
 
   if (validatingToken) {
-    return <Loader fullScreen />;
+    return <PageLoader message="Validating reset link..." />;
   }
 
   if (!tokenValid) {

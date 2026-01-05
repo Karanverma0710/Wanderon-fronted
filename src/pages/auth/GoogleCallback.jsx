@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import Loader from '../../components/common/Loader';
+import PageLoader from '../../components/common/PageLoader';
 import { ROUTES } from '../../utils/constants';
 
 const GoogleCallback = () => {
@@ -35,7 +35,7 @@ const GoogleCallback = () => {
     }
   };
 
-  return <Loader fullScreen />;
+  return <PageLoader message="Completing Google sign in..." />;
 };
 
 export default GoogleCallback;

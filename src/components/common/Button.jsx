@@ -1,4 +1,4 @@
-import Loader from './Loader';
+import Spinner from './Spinner';
 
 const Button = ({
   children,
@@ -12,13 +12,13 @@ const Button = ({
   className = '',
   icon,
 }) => {
-  const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center';
+  const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2';
 
   const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500',
-    secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500',
-    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
+    primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 shadow-md hover:shadow-lg',
+    secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500 shadow-md hover:shadow-lg',
+    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 shadow-md hover:shadow-lg',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-md hover:shadow-lg',
     outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-500',
     ghost: 'text-blue-600 hover:bg-blue-50 focus:ring-blue-500',
   };
@@ -33,6 +33,13 @@ const Button = ({
     fullWidth ? 'w-full' : ''
   } ${className}`;
 
+  const getSpinnerColor = () => {
+    if (variant === 'outline' || variant === 'ghost') {
+      return 'blue';
+    }
+    return 'white';
+  };
+
   return (
     <button
       type={type}
@@ -42,12 +49,12 @@ const Button = ({
     >
       {loading ? (
         <>
-          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-          Loading...
+          <Spinner size="sm" color={getSpinnerColor()} />
+          <span>Loading...</span>
         </>
       ) : (
         <>
-          {icon && <span className="mr-2">{icon}</span>}
+          {icon && <span>{icon}</span>}
           {children}
         </>
       )}
