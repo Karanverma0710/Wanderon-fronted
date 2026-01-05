@@ -10,10 +10,9 @@ const api = axios.create({
   },
 });
 
-
 api.interceptors.request.use(
   (config) => {
-    return config;
+   return config;
   },
   (error) => {
     return Promise.reject(error);
@@ -44,14 +43,22 @@ api.interceptors.response.use(
         );
 
         if (response.data.success) {
+           if (response.data.data?.user) {
+            localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
+          }
+
           return api(originalRequest);
         }
       } catch (refreshError) {
-        localStorage.removeItem('auth_user');
+         localStorage.removeItem('auth_user');
         
-       const currentPath = window.location.pathname;
-        if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-          window.location.href = '/login';
+        console.error('Session expired. Please login again.');
+        
+         const currentPath = window.location.pathname;
+        const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password', '/'];
+        
+        if (!publicPaths.some(path => currentPath.includes(path))) {
+          window.location.href = '/login?session=expired';
         }
         
         return Promise.reject(refreshError);
@@ -65,8 +72,10 @@ api.interceptors.response.use(
       localStorage.removeItem('auth_user');
       
       const currentPath = window.location.pathname;
-      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-        window.location.href = '/login';
+      const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password', '/'];
+      
+      if (!publicPaths.some(path => currentPath.includes(path))) {
+        window.location.href = '/login?session=expired';
       }
     }
 

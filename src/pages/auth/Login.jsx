@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -10,6 +10,7 @@ import { ROUTES } from '../../utils/constants';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, loading } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -20,6 +21,12 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
 
+  useEffect(() => {
+    const sessionExpired = searchParams.get('session');
+    if (sessionExpired === 'expired') {
+      setServerError('Your session has expired. Please login again.');
+    }
+  }, [searchParams]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({

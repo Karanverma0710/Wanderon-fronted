@@ -27,7 +27,7 @@ class AuthService {
 
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, sanitizedData);
       
-      if (response.data.success && response.data.data.user) {
+      if (response.data.success && response.data.data?.user) {
         localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
       }
       
@@ -45,6 +45,7 @@ class AuthService {
       
       return response.data;
     } catch (error) {
+      localStorage.removeItem('auth_user');
       return handleApiError(error);
     }
   }
@@ -57,6 +58,7 @@ class AuthService {
       
       return response.data;
     } catch (error) {
+      localStorage.removeItem('auth_user');
       return handleApiError(error);
     }
   }
@@ -65,24 +67,17 @@ class AuthService {
     try {
       const response = await api.get(API_ENDPOINTS.AUTH.ME);
       
-      if (response.data.success && response.data.data.user) {
+      if (response.data.success && response.data.data?.user) {
         localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
       }
       
       return response.data;
     } catch (error) {
+      localStorage.removeItem('auth_user');
       return handleApiError(error);
     }
   }
 
-  async refreshToken(refreshToken) {
-    try {
-      const response = await api.post(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
-      return response.data;
-    } catch (error) {
-      return handleApiError(error);
-    }
-  }
 
   async sendOTP(email, type = 'verification') {
     try {
@@ -107,7 +102,7 @@ class AuthService {
 
       const response = await api.post(API_ENDPOINTS.OTP.VERIFY, sanitizedData);
       
-      if (response.data.success && response.data.data.user) {
+      if (response.data.success && response.data.data?.user) {
         localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
       }
       
@@ -177,8 +172,10 @@ class AuthService {
     }
   }
 
-  async googleLogin() {
-    window.location.href = 'http://localhost:5000/api/oauth/google';
+  googleLogin() {
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const oauthUrl = backendUrl.replace('/api', '') + '/api/oauth/google';
+    window.location.href = oauthUrl;
   }
 
   async unlinkGoogle() {
