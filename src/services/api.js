@@ -4,15 +4,16 @@ import { API_BASE_URL, REQUEST_TIMEOUT, HTTP_STATUS } from '../utils/constants';
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: REQUEST_TIMEOUT,
-  withCredentials: true, 
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
 });
 
 api.interceptors.request.use(
   (config) => {
-   return config;
+    return config;
   },
   (error) => {
     return Promise.reject(error);
@@ -34,27 +35,34 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
+        console.log('🔄 Attempting token refresh...');
+        
         const response = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
           { 
-            withCredentials: true 
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'application/json',
+            }
           }
         );
 
         if (response.data.success) {
-           if (response.data.data?.user) {
+          console.log('✅ Token refreshed successfully');
+          
+          if (response.data.data?.user) {
             localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
           }
 
           return api(originalRequest);
         }
       } catch (refreshError) {
-         localStorage.removeItem('auth_user');
+        console.error('❌ Token refresh failed:', refreshError);
         
-        console.error('Session expired. Please login again.');
+        localStorage.removeItem('auth_user');
         
-         const currentPath = window.location.pathname;
+        const currentPath = window.location.pathname;
         const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password', '/'];
         
         if (!publicPaths.some(path => currentPath.includes(path))) {
@@ -69,6 +77,7 @@ api.interceptors.response.use(
       error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
       !originalRequest._retry
     ) {
+      console.error('❌ Unauthorized error');
       localStorage.removeItem('auth_user');
       
       const currentPath = window.location.pathname;
