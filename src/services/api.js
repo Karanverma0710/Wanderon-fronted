@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL, REQUEST_TIMEOUT, HTTP_STATUS } from '../utils/constants';
+import AuthService from './auth.service';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,6 +14,10 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -35,11 +40,11 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        console.log('🔄 Attempting token refresh...');
+        const refreshToken = localStorage.getItem('refresh_token');
         
         const response = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
-          {},
+          { refreshToken },
           { 
             withCredentials: true,
             headers: {
@@ -49,18 +54,25 @@ api.interceptors.response.use(
         );
 
         if (response.data.success) {
-          console.log('✅ Token refreshed successfully');
-          
           if (response.data.data?.user) {
             localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
           }
+          if (response.data.data?.accessToken) {
+            localStorage.setItem('access_token', response.data.data.accessToken);
+          }
+          if (response.data.data?.refreshToken) {
+            localStorage.setItem('refresh_token', response.data.data.refreshToken);
+          }
 
+          originalRequest.headers.Authorization = `Bearer ${response.data.data.accessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
-        console.error('❌ Token refresh failed:', refreshError);
+        console.error('Token refresh failed');
         
         localStorage.removeItem('auth_user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         
         const currentPath = window.location.pathname;
         const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password', '/'];
@@ -77,8 +89,9 @@ api.interceptors.response.use(
       error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
       !originalRequest._retry
     ) {
-      console.error('❌ Unauthorized error');
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       
       const currentPath = window.location.pathname;
       const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password', '/'];

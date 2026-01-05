@@ -27,8 +27,15 @@ class AuthService {
 
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, sanitizedData);
       
-      if (response.data.success && response.data.data?.user) {
+      if (response.data.success && response.data.data.user) {
         localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
+        
+        if (response.data.data.accessToken) {
+          localStorage.setItem('access_token', response.data.data.accessToken);
+        }
+        if (response.data.data.refreshToken) {
+          localStorage.setItem('refresh_token', response.data.data.refreshToken);
+        }
       }
       
       return response.data;
@@ -39,13 +46,18 @@ class AuthService {
 
   async logout() {
     try {
-      const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT);
+      const refreshToken = localStorage.getItem('refresh_token');
+      const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT, { refreshToken });
       
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       
       return response.data;
     } catch (error) {
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       return handleApiError(error);
     }
   }
@@ -55,10 +67,14 @@ class AuthService {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT_ALL);
       
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       
       return response.data;
     } catch (error) {
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       return handleApiError(error);
     }
   }
@@ -67,17 +83,15 @@ class AuthService {
     try {
       const response = await api.get(API_ENDPOINTS.AUTH.ME);
       
-      if (response.data.success && response.data.data?.user) {
+      if (response.data.success && response.data.data.user) {
         localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
       }
       
       return response.data;
     } catch (error) {
-      localStorage.removeItem('auth_user');
       return handleApiError(error);
     }
   }
-
 
   async sendOTP(email, type = 'verification') {
     try {
@@ -102,8 +116,15 @@ class AuthService {
 
       const response = await api.post(API_ENDPOINTS.OTP.VERIFY, sanitizedData);
       
-      if (response.data.success && response.data.data?.user) {
+      if (response.data.success && response.data.data.user) {
         localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
+        
+        if (response.data.data.accessToken) {
+          localStorage.setItem('access_token', response.data.data.accessToken);
+        }
+        if (response.data.data.refreshToken) {
+          localStorage.setItem('refresh_token', response.data.data.refreshToken);
+        }
       }
       
       return response.data;
@@ -199,6 +220,14 @@ class AuthService {
     }
   }
 
+  getAccessToken() {
+    return localStorage.getItem('access_token');
+  }
+
+  getRefreshToken() {
+    return localStorage.getItem('refresh_token');
+  }
+
   isAuthenticated() {
     const user = this.getStoredUser();
     return !!user;
@@ -206,6 +235,8 @@ class AuthService {
 
   clearAuth() {
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
   }
 }
 
